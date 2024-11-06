@@ -30,6 +30,7 @@ class _ConversorState extends State<Conversor> {
   //Inicializa uma variavel da seleção da currency
   String currency = "";
 
+  //
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,8 +58,12 @@ class _ConversorState extends State<Conversor> {
             case ConnectionState.none:
             case ConnectionState.waiting:
               return Center(
-                child: Text("Carregando...", style: TextStyle(color: Colors.brown[900]),),
-
+                child: Column(
+                  children: [
+                    Text("Carregando...", style: TextStyle(color: Colors.brown[900]),),
+                    CircularProgressIndicator()
+                  ],
+                )
               );
             case ConnectionState.active:
               return Center(
