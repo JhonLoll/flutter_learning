@@ -20,6 +20,7 @@ Future<Map> getData() async {
   http.Response response = await http.get(Uri.parse(request));
   return (json.decode(response.body));
 }
+
 class Conversor extends StatefulWidget {
   const Conversor({super.key});
 
@@ -28,11 +29,39 @@ class Conversor extends StatefulWidget {
 }
 
 class _ConversorState extends State<Conversor> {
+  //Inicializa uma variavel para armazenar resultados de erros
+  String errorCatch = "";
   //Inicializa a lista dos itens
-  List<String> listCurrencies = ['1', '2', '3'];
+  List<String> listCurrencies = [
+    'USD',
+    'EUR',
+    'BTC',
+  ];
 
   //Inicializa uma variável de seleção inicial do drpdown
   String? defaultSelection;
+
+  //Inicializa os controllers de cada campo de textfield
+  final brlController = TextEditingController();
+  final convertController = TextEditingController();
+
+  //Funções que alteram o valor convertido a cada alteração
+  void convertCurrency(double currencyValue) {
+    setState(() {
+      try {
+        var brlconvert = double.parse(brlController.text);
+        if (brlconvert <= 0) {
+          errorCatch = "Por favor, informe um valor maior que zero";
+          return;
+        }
+
+        var valueConvert = double.parse(brlController.text) / currencyValue;
+        convertController.text = valueConvert.toStringAsFixed(2);
+      } catch (e) {
+        errorCatch = "Erro ao converter os valores";
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,26 +108,43 @@ class _ConversorState extends State<Conversor> {
               );
             case ConnectionState.done:
               return Center(
-                child: Column(
-                  children: [
-                    SizedBox(height: 80,),
-                    DropdownButton(
-                      hint: Text("Selecione:"),
-                      value: defaultSelection,
-                      onChanged: (newValue){
-                        setState(() {
-                          defaultSelection = newValue;
-                        });
-                      },
-                      items: listCurrencies.map((location){
-                        return DropdownMenuItem(
-                          child: new Text(location),
-                          value: location,);
-                      }
-                      ).toList(),
-                    )
-                  ]
-                ),
+                child: Column(children: [
+                  SizedBox(
+                    height: 80,
+                  ),
+                  DropdownButton(
+                    hint: Text("Selecione:"),
+                    value: defaultSelection,
+                    onChanged: (newValue) {
+                      setState(() {
+                        defaultSelection = newValue;
+                        convertCurrency(snapshot.data!['results']['currencies']
+                            ['$defaultSelection']['sell']);
+                      });
+                    },
+                    items: listCurrencies.map((location) {
+                      return DropdownMenuItem(
+                        child: new Text(location),
+                        value: location,
+                      );
+                    }).toList(),
+                  ),
+                  Divider(),
+                  TextField(
+                    controller: brlController,
+                    decoration: InputDecoration(
+                        border: OutlineInputBorder(), hintText: 'R\$'),
+                    onChanged: (_) => convertCurrency(snapshot.data!['results']
+                        ['currencies']['$defaultSelection']['sell']),
+                  ),
+                  Divider(),
+                  TextField(
+                    controller: convertController,
+                    decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: defaultSelection),
+                  )
+                ]),
               );
           }
         },
