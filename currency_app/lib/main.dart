@@ -32,34 +32,72 @@ class _ConversorState extends State<Conversor> {
   //Inicializa uma variavel para armazenar resultados de erros
   String errorCatch = "";
   //Inicializa a lista dos itens
-  List<String> listCurrencies = [
-    'USD',
-    'EUR',
-    'BTC',
-  ];
+  List<String> listCurrencies = ['USD', 'EUR', 'BTC', 'BRL'];
 
   //Inicializa uma variável de seleção inicial do drpdown
-  String? defaultSelection;
+  String? convert1;
+  String? convert2;
+  //Inicializa a variavel de hint text dos textfield
+  String? hintText1;
+  String? hintText2;
+
+  void transformHintText() {
+    switch (convert1) {
+      case "BRL":
+        setState(() {
+          hintText1 = "R\$";
+        });
+      case "USD":
+        setState(() {
+          hintText1 = "\$";
+        });
+        break;
+      case "EUR":
+        setState(() {
+          hintText1 = "€";
+        });
+      case "BTC":
+        setState(() {
+          hintText1 = "BTC";
+        });
+        break;
+      default:
+    }
+    switch (convert2) {
+      case "BRL":
+        setState(() {
+          hintText2 = "R\$";
+        });
+      case "USD":
+        setState(() {
+          hintText2 = "\$";
+        });
+        break;
+      case "EUR":
+        setState(() {
+          hintText2 = "€";
+        });
+      case "BTC":
+        setState(() {
+          hintText2 = "BTC";
+        });
+        break;
+      default:
+    }
+  }
 
   //Inicializa os controllers de cada campo de textfield
   final brlController = TextEditingController();
   final convertController = TextEditingController();
 
   //Funções que alteram o valor convertido a cada alteração
-  void convertCurrency(double currencyValue) {
+  void convertCurrency(double currencyValue1, double currencyValue2) {
     setState(() {
-      try {
-        var brlconvert = double.parse(brlController.text);
-        if (brlconvert <= 0) {
-          errorCatch = "Por favor, informe um valor maior que zero";
-          return;
-        }
+      var value1 = double.parse(brlController.text);
 
-        var valueConvert = double.parse(brlController.text) / currencyValue;
-        convertController.text = valueConvert.toStringAsFixed(2);
-      } catch (e) {
-        errorCatch = "Erro ao converter os valores";
-      }
+      value1 = currencyValue1 * value1;
+      var valueConverted = value1 / currencyValue2;
+      convertController.text = valueConverted.toStringAsFixed(2);
     });
   }
 
@@ -69,7 +107,7 @@ class _ConversorState extends State<Conversor> {
       backgroundColor: Colors.lightBlue[50],
       appBar: AppBar(
         title: Text(
-          "CONVERSOR - BRL to $defaultSelection",
+          "CONVERSOR - $convert1 to $convert2",
           style: const TextStyle(color: Colors.white),
         ),
         leading:
@@ -114,12 +152,11 @@ class _ConversorState extends State<Conversor> {
                   ),
                   DropdownButton(
                     hint: Text("Selecione:"),
-                    value: defaultSelection,
+                    value: convert1,
                     onChanged: (newValue) {
                       setState(() {
-                        defaultSelection = newValue;
-                        convertCurrency(snapshot.data!['results']['currencies']
-                            ['$defaultSelection']['sell']);
+                        convert1 = newValue;
+                        transformHintText();
                       });
                     },
                     items: listCurrencies.map((location) {
@@ -133,16 +170,34 @@ class _ConversorState extends State<Conversor> {
                   TextField(
                     controller: brlController,
                     decoration: InputDecoration(
-                        border: OutlineInputBorder(), hintText: 'R\$'),
-                    onChanged: (_) => convertCurrency(snapshot.data!['results']
-                        ['currencies']['$defaultSelection']['sell']),
+                        border: OutlineInputBorder(), hintText: hintText1),
+                    onChanged: (_) => convertCurrency(
+                        snapshot.data!['results']['currencies']['$convert1']
+                            ['sell'],
+                        snapshot.data!['results']['currencies']['$convert2']
+                            ['sell']),
                   ),
                   Divider(),
+                  DropdownButton(
+                    hint: Text("Selecione:"),
+                    value: convert2,
+                    onChanged: (newValue) {
+                      setState(() {
+                        convert2 = newValue;
+                        transformHintText();
+                      });
+                    },
+                    items: listCurrencies.map((location) {
+                      return DropdownMenuItem(
+                        child: new Text(location),
+                        value: location,
+                      );
+                    }).toList(),
+                  ),
                   TextField(
                     controller: convertController,
                     decoration: InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: defaultSelection),
+                        border: OutlineInputBorder(), hintText: hintText2),
                   )
                 ]),
               );
